@@ -1,0 +1,13 @@
+*.log
+
+/build/
+
+*.o
+*.a
+*.so
+*.dll
+*.exe
+*.out
+
+/data/*
+venv/
