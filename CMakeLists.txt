@@ -1,8 +1,7 @@
-# Project definition
 cmake_minimum_required(VERSION 3.15)
 project(SoftmaxAcceleration LANGUAGES CXX)
 
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -flto")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -flto -mavx2 -mfma")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,6 +25,9 @@ target_include_directories(common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/common)
 
 set(SOFTMAX_SOURCES
   src/cpu_sequential/softmax_naive_cpu.cpp
+  src/cpu_sequential/softmax_foolish_handcoding_cpu.cpp
+  src/cpu_sequential/softmax_simd_cpu.cpp
+  src/cpu_sequential/softmax_fused_simd_cpu.cpp
 )
 add_library(softmax ${SOFTMAX_SOURCES})
 target_include_directories(softmax PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

@@ -1,19 +1,12 @@
-# --- User-friendly Makefile Orchestrator ---
-# This Makefile wraps CMake commands for a simpler user experience.
-
-# Configuration
 BUILD_DIR := build
 BENCH_EXEC := $(BUILD_DIR)/bench
 PYTHON := python3
 
-# Test data sizes (powers of 2)
-TEST_SIZES := 1024 4096 16384 65536 262144
+TEST_SIZES := 1024 4096 16384 65536 262144 524288 1048576 2097152 4194304 8388608 16777216 33554432 67108864 134217728 268435456
 
-# Default target
 .DEFAULT_GOAL := help
 
-# Phony targets do not represent files
-.PHONY: all build configure benchmark test clean help
+.PHONY: all build configure benchmark clean help bench
 
 # Targets
 help:
@@ -31,16 +24,15 @@ build: configure
 	@echo "--- Building project with Ninja ---"
 	@cmake --build $(BUILD_DIR)
 
-# Generate all required data files
 generate-data:
 	@echo "--- Generating test data for sizes: $(TEST_SIZES) ---"
 	@for size in $(TEST_SIZES); do \
 $(PYTHON) scripts/generate_data.py --size $$size --output data/vector_$$size.bin; \
 done
 
-benchmark: build generate-data
+benchmark bench: build generate-data
 	@echo "--- Running benchmarks ---"
-	@$(BENCH_EXEC)
+	@$(BENCH_EXEC) # --benchmark_repetitions=5
 
 clean:
 	@echo "--- Cleaning project ---"
