@@ -34,6 +34,10 @@ benchmark bench: build generate-data
 	@echo "--- Running benchmarks ---"
 	@$(BENCH_EXEC) # --benchmark_repetitions=5
 
+test: build
+	@echo "--- Running unit tests ---"
+	@ctest --test-dir $(BUILD_DIR) --output-on-failure
+
 clean:
 	@echo "--- Cleaning project ---"
 	@rm -rf $(BUILD_DIR) data/*
