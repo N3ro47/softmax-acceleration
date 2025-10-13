@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(SoftmaxAcceleration LANGUAGES CXX)
+project(SoftmaxAcceleration LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -flto -mavx2 -mfma")
 
@@ -41,11 +41,21 @@ set(SOFTMAX_SOURCES
 add_library(softmax ${SOFTMAX_SOURCES})
 target_include_directories(softmax PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+set(CMAKE_CUDA_ARCHITECTURES 86)
+
+set(CUDA_SOURCES
+    src/gpu/softmax_gpu.cu
+)
+add_library(cuda ${CUDA_SOURCES})
+target_include_directories(cuda PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+target_compile_options(cuda PRIVATE -g)
+
 find_package(dnnl QUIET)
 if(dnnl_FOUND)
   message(STATUS "Found oneDNN, enabling oneDNN implementation.")
   target_sources(softmax PRIVATE src/softmax_onednn_cpu.cpp)
-  target_link_libraries(softmax PUBLIC dnnl::dnnl)
+  target_link_libraries(softmax PUBLIC dnnl)
 else()
   message(WARNING "oneDNN not found. oneDNN implementation will be disabled.")
 endif()
@@ -65,6 +75,7 @@ add_executable(bench benchmarks/main_bench.cpp)
 target_link_libraries(bench
   common
   softmax
+  cuda
   $<$<TARGET_EXISTS:softmax_omp>:softmax_omp>
   benchmark::benchmark
 )
