@@ -88,6 +88,7 @@ target_include_directories(softmax_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc
 target_link_libraries(softmax_tests
   common
   softmax
+  cuda
   $<$<TARGET_EXISTS:softmax_omp>:softmax_omp>
   GTest::gtest_main
 )
