@@ -56,6 +56,8 @@ TEST(SoftmaxImplementations, RandomVectorsAgreeWithNaiveCpu) {
         {"softmax_foolish_handcoding_cpu", softmax_foolish_handcoding_cpu, 1e-5f, 1e-5f},
         {"softmax_fused_simd_cpu", softmax_fused_simd_cpu, 2e-5f, 2e-5f},
         {"softmax_gpu", softmax_gpu, 1e-4f, 1e-4f},
+        {"softmax_gpu_thrust", softmax_gpu_thrust, 1e-4f, 1e-4f},
+        {"softmax_gpu_cub_fused", softmax_gpu_cub_fused, 1e-4f, 1e-4f},
     };
 #ifdef HAVE_SOFTMAX_OMP
     impls.push_back({"softmax_naive_omp", softmax_naive_omp, 2e-5f, 2e-5f});

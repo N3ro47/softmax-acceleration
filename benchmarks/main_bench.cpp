@@ -72,6 +72,24 @@ BENCHMARK_DEFINE_F(SoftmaxBench, Gpu)(benchmark::State& state) {
     }
 }
 
+BENCHMARK_DEFINE_F(SoftmaxBench, GpuThrust)(benchmark::State& state) {
+    for (auto _ : state) {
+        state.PauseTiming();
+        std::vector<float> test_data = data;
+        state.ResumeTiming();
+        softmax_gpu_thrust(test_data);
+    }
+}
+
+BENCHMARK_DEFINE_F(SoftmaxBench, GpuCubFused)(benchmark::State& state) {
+    for (auto _ : state) {
+        state.PauseTiming();
+        std::vector<float> test_data = data;
+        state.ResumeTiming();
+        softmax_gpu_cub_fused(test_data);
+    }
+}
+
 #ifdef HAVE_SOFTMAX_OMP
 BENCHMARK_DEFINE_F(SoftmaxBench, NaiveOMP)(benchmark::State& state) {
     for (auto _ : state) {
@@ -134,6 +152,8 @@ BENCHMARK_DEFINE_F(SoftmaxBench, OneDNN_CPU)(benchmark::State& state) {
 REGISTER_SOFTMAX_BENCHMARK(Gpu);
 REGISTER_SOFTMAX_BENCHMARK(NaiveCPU);
 REGISTER_SOFTMAX_BENCHMARK(SimdCpu);
+REGISTER_SOFTMAX_BENCHMARK(GpuCubFused);
+REGISTER_SOFTMAX_BENCHMARK(GpuThrust);
  #ifdef HAVE_SOFTMAX_OMP
 REGISTER_SOFTMAX_BENCHMARK(NaiveOMP);
 REGISTER_SOFTMAX_BENCHMARK(SimdOMP);

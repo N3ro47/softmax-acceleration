@@ -6,6 +6,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -flto 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+
+set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+
 include(FetchContent)
 
 FetchContent_Declare(
@@ -45,11 +50,13 @@ set(CMAKE_CUDA_ARCHITECTURES 86)
 
 set(CUDA_SOURCES
     src/gpu/softmax_gpu.cu
+    src/gpu/softmax_thrust.cu
+    src/gpu/softmax_cub.cu
 )
 add_library(cuda ${CUDA_SOURCES})
 target_include_directories(cuda PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_compile_options(cuda PRIVATE -g)
+target_compile_options(cuda PRIVATE $<$<CONFIG:Release>:-O3>)
 
 find_package(dnnl QUIET)
 if(dnnl_FOUND)
