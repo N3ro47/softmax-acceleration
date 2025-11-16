@@ -45,6 +45,7 @@ set(CMAKE_CUDA_ARCHITECTURES 86)
 
 set(CUDA_SOURCES
     src/gpu/softmax_gpu.cu
+    src/gpu/softmax_after_opt_gpu.cu
 )
 add_library(cuda ${CUDA_SOURCES})
 target_include_directories(cuda PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
