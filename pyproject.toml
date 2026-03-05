@@ -1,0 +1,9 @@
+[project]
+name = "softmax-bench-jax"
+version = "0.1.0"
+description = "JAX CUDA benchmarks for softmax-acceleration"
+requires-python = ">=3.10"
+dependencies = [
+    "jax[cuda12]",
+    "numpy",
+]

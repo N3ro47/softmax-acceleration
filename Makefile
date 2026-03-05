@@ -6,15 +6,18 @@ TEST_SIZES := 1024 4096 16384 65536 262144 524288 1048576 2097152 4194304 838860
 
 .DEFAULT_GOAL := help
 
-.PHONY: all build configure benchmark clean help bench
+.PHONY: all build configure benchmark clean help bench setup-jax benchmark-jax
 
 # Targets
 help:
 	@echo "Available commands:"
-	@echo "  make configure   - Configures the project using CMake and Ninja."
-	@echo "  make build       - Builds all targets (requires configuration first)."
-	@echo "  make benchmark   - Generates data and runs performance benchmarks."
-	@echo "  make clean       - Removes generated build files and test data."
+	@echo "  make configure      - Configures the project using CMake and Ninja."
+	@echo "  make build          - Builds all targets (requires configuration first)."
+	@echo "  make benchmark      - Generates data and runs C++ performance benchmarks."
+	@echo "  make setup-jax      - Creates uv Python environment with JAX CUDA deps."
+	@echo "  make benchmark-jax  - Runs JAX CUDA softmax benchmarks."
+	@echo "  make test           - Builds and runs unit tests via ctest."
+	@echo "  make clean          - Removes generated build files and test data."
 
 configure:
 	@echo "--- Configuring project with CMake ---"
@@ -27,12 +30,20 @@ build: configure
 generate-data:
 	@echo "--- Generating test data for sizes: $(TEST_SIZES) ---"
 	@for size in $(TEST_SIZES); do \
-$(PYTHON) scripts/generate_data.py --size $$size --output data/vector_$$size.bin; \
-done
+	$(PYTHON) scripts/generate_data.py --size $$size --output data/vector_$$size.bin; \
+	done
 
 benchmark bench: build generate-data
-	@echo "--- Running benchmarks ---"
+	@echo "--- Running C++ benchmarks ---"
 	@$(BENCH_EXEC) # --benchmark_repetitions=5
+
+setup-jax:
+	@echo "--- Setting up JAX CUDA environment (uv) ---"
+	@uv sync
+
+benchmark-jax: setup-jax
+	@echo "--- Running JAX CUDA benchmarks ---"
+	@uv run python scripts/softmax_jax.py
 
 test: build
 	@echo "--- Running unit tests ---"

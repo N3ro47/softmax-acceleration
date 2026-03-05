@@ -71,6 +71,68 @@ make bench
   ```
 - The benchmark sizes are defined in `Makefile` and registered in `benchmarks/main_bench.cpp`.
 
+## JAX vs hand-written CUDA — the `@jax.jit` experiment
+
+The CUDA kernels in `src/gpu/` were written by my friend (Michał) as hand-written, multi-kernel implementations. The "optimized version" (`softmax_gpu_opt`) launches 4 separate kernels with `cudaDeviceSynchronize()` between each step (find max → exp → sum → divide).
+
+Before I even started, my hypothesis was that a 4-line Python function with `@jax.jit`:
+
+```python
+@jax.jit
+def softmax_jax_manual(x):
+    x_max = jnp.max(x)
+    e_x = jnp.exp(x - x_max)
+    return e_x / jnp.sum(e_x)
+```
+
+…would blow away Michał's "optimized" CUDA implementation, because XLA fuses the entire computation into a single GPU kernel zero intermediate global memory writes, zero sync barriers. Of course there is limit from what can you expect your uni friend to do writting cuda for the first time at uni.
+
+**It did. By up to 16×.**
+
+### C++ CUDA results (`make bench`, RTX 3060 Ti)
+
+```
+SoftmaxBench/Gpu_opt/1024          0.139 ms
+SoftmaxBench/Gpu_opt/65536         0.199 ms
+SoftmaxBench/Gpu_opt/1048576       1.02  ms
+SoftmaxBench/Gpu_opt/8388608       6.67  ms
+SoftmaxBench/Gpu_opt/67108864     43.3   ms
+SoftmaxBench/Gpu_opt/268435456   173     ms
+```
+
+### JAX results (`make benchmark-jax`)
+
+```
+          Size     jax.nn.softmax (ms)     manual softmax (ms)
+--------------------------------------------------------------
+         1,024      0.2134 ± 0.0075        0.0518 ± 0.0021
+        65,536      0.2298 ± 0.0187        0.0499 ± 0.0022
+     1,048,576      0.2696 ± 0.0192        0.1094 ± 0.0026
+     8,388,608      0.7656 ± 0.0123        0.3984 ± 0.0097
+    67,108,864      5.3576 ± 0.0870        2.6608 ± 0.0274
+   268,435,456     20.9255 ± 0.0258       10.4152 ± 0.0392
+```
+
+### Head-to-head: JAX manual vs C++ GPU_opt
+
+| Size | C++ GPU_opt | JAX `@jax.jit` | Speedup |
+|---:|---:|---:|---:|
+| 1K | 0.139 ms | 0.052 ms | **2.6×** |
+| 64K | 0.199 ms | 0.050 ms | **3.0×** |
+| 1M | 1.02 ms | 0.100 ms | **10.2×** |
+| 8M | 6.67 ms | 0.399 ms | **16.7×** |
+| 67M | 43.3 ms | 2.74 ms | **15.8×** |
+| 268M | 173 ms | 10.8 ms | **16.0×** |
+
+XLA compiles the whole softmax into a single fused Triton kernel, while the C++ version pays for 4 kernel launches + syncs + intermediate global memory traffic. To close the gap in C++ you'd need to implement online softmax (single-pass fused max+sum+normalize).
+
+
+
+```bash
+make setup-jax       # one-time: creates .venv with JAX + CUDA 12
+make benchmark-jax   # runs JAX GPU benchmarks
+```
+
 ## Adding a new softmax implementation
 
 Follow these steps to add a new implementation and integrate it into builds, benchmarks, and tests.
